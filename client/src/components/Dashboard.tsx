@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, getActiveUser } from '../api';
 import type { Board } from '../api';
-import { Plus, LogOut, ArrowRight, Layers, Sparkles, RefreshCw } from 'lucide-react';
+import { Plus, LogOut, ArrowRight, Layers, Sparkles, RefreshCw, Trash2 } from 'lucide-react';
 
 interface DashboardProps {
   onSelectBoard: (boardId: number) => void;
@@ -11,6 +11,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ onSelectBoard, onLogout }) => {
   const [boards, setBoards] = useState<Board[]>([]);
   const [newBoardName, setNewBoardName] = useState('');
+  const [joinID, setJoinID] = useState('');
   const [loading, setLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +54,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectBoard, onLogout })
     } finally {
       setCreateLoading(false);
     }
+  };
+
+  const handleJoinByID = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinID.trim()) return;
+    const id = parseInt(joinID.trim(), 10);
+    if (isNaN(id)) return;
+    onSelectBoard(id);
   };
 
   return (
@@ -101,40 +110,79 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectBoard, onLogout })
         {/* Dashboard Content Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          {/* Left Column: Create Room Form */}
+          {/* Left Column: Create Room & Join Room Forms */}
           <div className="md:col-span-1">
             <div className="glass-panel p-6 rounded-2xl flex flex-col gap-6 sticky top-8">
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="w-5 h-5 text-neon-purple" />
-                <h3 className="font-heading font-extrabold text-lg text-white m-0">
-                  Host New Board
-                </h3>
-              </div>
-
-              <form onSubmit={handleCreateBoard} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-heading font-bold tracking-wider text-slate-400 uppercase">
-                    Board / Room Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newBoardName}
-                    onChange={(e) => setNewBoardName(e.target.value)}
-                    placeholder="e.g. Pixel Pioneers"
-                    className="w-full bg-navy-darker border border-navy-border focus:border-neon-purple focus:ring-1 focus:ring-neon-purple outline-none rounded-lg px-4 py-3 text-sm text-slate-200 transition-all font-sans"
-                  />
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-5 h-5 text-neon-purple" />
+                  <h3 className="font-heading font-extrabold text-lg text-white m-0">
+                    Host New Board
+                  </h3>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={createLoading || !newBoardName.trim()}
-                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-neon-purple to-neon-blue text-navy-darker font-heading font-bold text-xs tracking-wide py-3.5 rounded-lg hover:shadow-[0_0_15px_rgba(192,132,252,0.3)] hover:brightness-110 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed uppercase"
-                >
-                  <Plus className="w-4 h-4 stroke-[3px]" />
-                  {createLoading ? 'Hosting...' : 'Host Room'}
-                </button>
-              </form>
+                <form onSubmit={handleCreateBoard} className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-heading font-bold tracking-wider text-slate-400 uppercase">
+                      Board / Room Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newBoardName}
+                      onChange={(e) => setNewBoardName(e.target.value)}
+                      placeholder="e.g. Pixel Pioneers"
+                      className="w-full bg-navy-darker border border-navy-border focus:border-neon-purple focus:ring-1 focus:ring-neon-purple outline-none rounded-lg px-4 py-3 text-sm text-slate-200 transition-all font-sans"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={createLoading || !newBoardName.trim()}
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-neon-purple to-neon-blue text-navy-darker font-heading font-bold text-xs tracking-wide py-3.5 rounded-lg hover:shadow-[0_0_15px_rgba(192,132,252,0.3)] hover:brightness-110 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed uppercase"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3px]" />
+                    {createLoading ? 'Hosting...' : 'Host Room'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Separator line */}
+              <div className="border-t border-navy-border/60"></div>
+
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2.5">
+                  <ArrowRight className="w-5 h-5 text-neon-blue" />
+                  <h3 className="font-heading font-extrabold text-lg text-white m-0">
+                    Join Room by ID
+                  </h3>
+                </div>
+
+                <form onSubmit={handleJoinByID} className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-heading font-bold tracking-wider text-slate-400 uppercase">
+                      Room Number / ID
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={joinID}
+                      onChange={(e) => setJoinID(e.target.value)}
+                      placeholder="e.g. 42"
+                      className="w-full bg-navy-darker border border-navy-border focus:border-neon-blue focus:ring-1 focus:ring-neon-blue outline-none rounded-lg px-4 py-3 text-sm text-slate-200 transition-all font-sans"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={!joinID.trim()}
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-neon-blue to-neon-purple text-navy-darker font-heading font-bold text-xs tracking-wide py-3.5 rounded-lg hover:shadow-[0_0_15px_rgba(56,189,248,0.3)] hover:brightness-110 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed uppercase"
+                  >
+                    <ArrowRight className="w-4 h-4 stroke-[3px]" />
+                    Join Room
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
 
@@ -193,13 +241,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectBoard, onLogout })
                       <span className="text-[11px] font-sans text-slate-400">
                         Room <span className="text-neon-blue font-semibold">#{board.id}</span>
                       </span>
-                      <button
-                        onClick={() => onSelectBoard(board.id)}
-                        className="flex items-center gap-1.5 text-xs font-heading font-bold tracking-wider text-neon-blue hover:text-white cursor-pointer group-hover:translate-x-0.5 transition-all"
-                      >
-                        JOIN GAME
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
+                      
+                      <div className="flex items-center gap-3">
+                        {board.owner_id === user?.id && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`Are you sure you want to permanently delete room "${board.name}"?`)) {
+                                try {
+                                  await api.deleteBoard(board.id);
+                                  await fetchBoards();
+                                } catch (err: any) {
+                                  alert(err.message || 'Failed to delete room');
+                                }
+                              }
+                            }}
+                            className="text-red-500 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg cursor-pointer transition-all hover:scale-110 active:scale-95 duration-200"
+                            title="Delete Room"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        
+                        <button
+                          onClick={() => onSelectBoard(board.id)}
+                          className="flex items-center gap-1.5 text-xs font-heading font-bold tracking-wider text-neon-blue hover:text-white cursor-pointer group-hover:translate-x-0.5 transition-all"
+                        >
+                          JOIN GAME
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

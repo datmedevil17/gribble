@@ -31,14 +31,25 @@ export interface PlayerScore {
 
 export interface GameState {
   board_id: number;
-  status: 'WAITING' | 'DRAWING' | 'ENDED';
+  status: 'WAITING' | 'SELECTING_WORD' | 'DRAWING' | 'ENDED' | 'GAME_OVER';
   current_word?: string;
   drawer_id?: number;
   round_num: number;
   time_remaining: number;
   scores: Record<number, PlayerScore>;
+  // Room configuration
+  max_rounds: number;
+  draw_time: number;
+  hints: number;
+  language: string;
+  game_mode: string;
+  word_count: number;
+  custom_words: string;
+  custom_words_only: boolean;
+  is_started: boolean;
+  // Word selection phase
+  word_options?: string[];
 }
-
 
 export const getAuthToken = (): string | null => localStorage.getItem('token');
 export const setAuthToken = (token: string) => localStorage.setItem('token', token);
@@ -80,7 +91,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       const data = await response.json();
       errMsg = data.error || errMsg;
     } catch {
-      // JSON parsing failed, use status text
       errMsg = response.statusText || errMsg;
     }
     throw new Error(errMsg);
@@ -118,6 +128,16 @@ export const api = {
 
   getBoard: (id: number) => request<Board>(`/boards/${id}`),
 
+  joinBoard: (boardId: number) =>
+    request<any>(`/boards/${boardId}/join`, {
+      method: 'POST',
+    }),
+
+  deleteBoard: (boardId: number) =>
+    request<{ message: string }>(`/boards/${boardId}`, {
+      method: 'DELETE',
+    }),
+
   // Board Membership Administration
   addMember: (boardId: number, email: string, role: 'ADMIN' | 'EDITOR' | 'VIEWER') =>
     request<BoardMember>(`/boards/${boardId}/members`, {
@@ -128,5 +148,10 @@ export const api = {
   removeMember: (boardId: number, userId: number) =>
     request<{ message: string }>(`/boards/${boardId}/members/${userId}`, {
       method: 'DELETE',
+    }),
+
+  restartGame: (boardId: number) =>
+    request<{ message: string }>(`/boards/${boardId}/restart`, {
+      method: 'POST',
     }),
 };

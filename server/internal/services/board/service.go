@@ -2,6 +2,8 @@ package board
 
 import (
 	"errors"
+	"math/rand"
+	"time"
 
 	"scribbble/server/internal/models"
 
@@ -13,6 +15,8 @@ type Service interface {
 	GetBoard(boardID uint) (*models.Board, error)
 	ListBoards(userID uint) ([]models.Board, error)
 	AddMember(boardID uint, email string, role models.BoardRole) (*models.BoardMember, error)
+	JoinBoard(boardID uint, userID uint, role models.BoardRole) (*models.BoardMember, error)
+	DeleteBoard(boardID uint, userID uint) error
 	RemoveMember(boardID uint, userID uint) error
 }
 
@@ -29,7 +33,18 @@ func (s *service) CreateBoard(name string, ownerID uint) (*models.Board, error) 
 		return nil, errors.New("board name is required")
 	}
 
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var candidateID uint
+	for {
+		candidateID = uint(100000 + r.Intn(900000))
+		var count int64
+		if err := s.db.Model(&models.Board{}).Where("id = ?", candidateID).Count(&count).Error; err == nil && count == 0 {
+			break
+		}
+	}
+
 	board := &models.Board{
+		ID:      candidateID,
 		Name:    name,
 		OwnerID: ownerID,
 	}
@@ -74,12 +89,8 @@ func (s *service) GetBoard(boardID uint) (*models.Board, error) {
 
 func (s *service) ListBoards(userID uint) ([]models.Board, error) {
 	var boards []models.Board
-	// Find all boards where user is a member
-	err := s.db.Joins("JOIN board_members ON board_members.board_id = boards.id").
-		Where("board_members.user_id = ?", userID).
-		Preload("Owner").
-		Find(&boards).Error
-
+	// Find all active public boards so players can see and join them
+	err := s.db.Preload("Owner").Find(&boards).Error
 	return boards, err
 }
 
@@ -115,6 +126,58 @@ func (s *service) AddMember(boardID uint, email string, role models.BoardRole) (
 	// Preload the user details
 	member.User = user
 	return member, nil
+}
+
+func (s *service) JoinBoard(boardID uint, userID uint, role models.BoardRole) (*models.BoardMember, error) {
+	// Check if already a member to prevent GORM duplicate key errors
+	var existing models.BoardMember
+	err := s.db.Where("board_id = ? AND user_id = ?", boardID, userID).First(&existing).Error
+	if err == nil {
+		return &existing, nil
+	}
+
+	// Validate role
+	if role != models.RoleAdmin && role != models.RoleEditor && role != models.RoleViewer {
+		role = models.RoleEditor
+	}
+
+	member := &models.BoardMember{
+		BoardID: boardID,
+		UserID:  userID,
+		Role:    role,
+	}
+
+	if err := s.db.Create(member).Error; err != nil {
+		return nil, err
+	}
+
+	return member, nil
+}
+
+func (s *service) DeleteBoard(boardID uint, userID uint) error {
+	var board models.Board
+	if err := s.db.First(&board, boardID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("board not found")
+		}
+		return err
+	}
+
+	if board.OwnerID != userID {
+		return errors.New("access denied: only the room creator can delete this room")
+	}
+
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		// Delete membership associations
+		if err := tx.Where("board_id = ?", boardID).Delete(&models.BoardMember{}).Error; err != nil {
+			return err
+		}
+		// Delete room record
+		if err := tx.Delete(&board).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (s *service) RemoveMember(boardID uint, userID uint) error {

@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
+	boardSvc "scribbble/server/internal/services/board"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -20,11 +22,12 @@ var upgrader = websocket.Upgrader{
 }
 
 type Handler struct {
-	hub *Hub
+	hub      *Hub
+	boardSvc boardSvc.Service
 }
 
-func NewHandler(hub *Hub) *Handler {
-	return &Handler{hub: hub}
+func NewHandler(hub *Hub, boardSvc boardSvc.Service) *Handler {
+	return &Handler{hub: hub, boardSvc: boardSvc}
 }
 
 func (h *Handler) HandleConnection(c *gin.Context) {
@@ -68,6 +71,12 @@ func (h *Handler) HandleConnection(c *gin.Context) {
 		BoardID:  boardID,
 	}
 
+	// 4b. Register board owner for permission checks
+	board, boardErr := h.boardSvc.GetBoard(boardID)
+	if boardErr == nil && board.OwnerID == userID {
+		h.hub.SetOwner(boardID, userID)
+	}
+
 	// 5. Send to register queue in the central hub event loop
 	h.hub.register <- client
 
@@ -95,4 +104,27 @@ func (h *Handler) HandleConnection(c *gin.Context) {
 
 	// 8. Start blocking incoming data reading pump on the main thread
 	client.ReadPump()
+}
+
+func (h *Handler) RestartGame(c *gin.Context) {
+	boardIDStr := c.Param("id")
+	boardID64, err := strconv.ParseUint(boardIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid board ID"})
+		return
+	}
+	boardID := uint(boardID64)
+
+	// 1. Reset game state in Redis (resets round counts and wipes scores)
+	ctxBg := context.Background()
+	err = h.hub.gameSvc.ResetGame(ctxBg, boardID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 2. Broadcast system announcement
+	h.hub.broadcastSystemMessage(boardID, "The lobby host has restarted the game! Get ready! 🏁")
+
+	c.JSON(http.StatusOK, gin.H{"message": "Game restarted successfully"})
 }

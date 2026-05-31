@@ -121,3 +121,52 @@ func (h *Handler) RemoveMember(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Member removed successfully"})
 }
+
+func (h *Handler) Join(c *gin.Context) {
+	boardIDStr := c.Param("id")
+	boardID, err := strconv.ParseUint(boardIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid board ID"})
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userID := userIDVal.(uint)
+
+	// Automatically register them with the EDITOR role so they can draw when rotated
+	member, err := h.boardSvc.JoinBoard(uint(boardID), userID, "EDITOR")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, member)
+}
+
+func (h *Handler) Delete(c *gin.Context) {
+	boardIDStr := c.Param("id")
+	boardID, err := strconv.ParseUint(boardIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid board ID"})
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userID := userIDVal.(uint)
+
+	err = h.boardSvc.DeleteBoard(uint(boardID), userID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Room deleted successfully"})
+}

@@ -53,8 +53,7 @@ func main() {
 	authSvc := authService.NewService(db.Postgres, cfg)
 	boardSvc := boardService.NewService(db.Postgres)
 	strokeSvc := strokeService.NewService(db.MongoDB)
-	gameSvc := gameService.NewService(db.Redis)
-	_ = gameSvc // Keep referenced for turning loops
+	_ = gameService.NewService(db.Redis, strokeSvc) // referenced by hub internally
 
 	// 5. Initialize central Hub and active run loops
 	hub := wsHandler.NewHub(strokeSvc, db.Redis)
@@ -63,7 +62,7 @@ func main() {
 	// 6. Initialize handlers
 	authH := authHandler.NewHandler(authSvc)
 	boardH := boardHandler.NewHandler(boardSvc)
-	wsH := wsHandler.NewHandler(hub)
+	wsH := wsHandler.NewHandler(hub, boardSvc)
 
 	// 7. Set up HTTP Router (Gin)
 	router := gin.Default()
@@ -88,6 +87,8 @@ func main() {
 			// Board Creation and Listing
 			protected.POST("/boards", boardH.Create)
 			protected.GET("/boards", boardH.List)
+			protected.POST("/boards/:id/join", boardH.Join)
+			protected.DELETE("/boards/:id", boardH.Delete)
 
 			// Single Board (Requires Viewer role weight or higher)
 			boardGroup := protected.Group("/boards/:id")
@@ -100,11 +101,12 @@ func main() {
 			}
 
 			// Board Administration (Requires Admin role weight or higher)
-			boardAdminGroup := protected.Group("/boards/:id/members")
+			boardAdminGroup := protected.Group("/boards/:id")
 			boardAdminGroup.Use(middleware.RequireBoardRole(models.RoleAdmin))
 			{
-				boardAdminGroup.POST("", boardH.AddMember)
-				boardAdminGroup.DELETE("/:userId", boardH.RemoveMember)
+				boardAdminGroup.POST("/members", boardH.AddMember)
+				boardAdminGroup.DELETE("/members/:userId", boardH.RemoveMember)
+				boardAdminGroup.POST("/restart", wsH.RestartGame)
 			}
 		}
 	}

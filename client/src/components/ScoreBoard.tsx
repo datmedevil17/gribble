@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { GameState, User } from '../api';
-import { Clock, Paintbrush, Shield, User as UserIcon } from 'lucide-react';
+import { Clock, Paintbrush, Shield, User as UserIcon, Copy, Check } from 'lucide-react';
 
 interface ScoreBoardProps {
   gameState: GameState | null;
@@ -15,6 +15,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
 }) => {
   const isDrawer = gameState?.drawer_id === currentUserID;
   const timeRemaining = gameState?.time_remaining ?? 60;
+  const [copied, setCopied] = useState(false);
   
   // Decide timer glow theme based on remaining seconds
   const getTimerColorClass = () => {
@@ -22,6 +23,50 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
     if (timeRemaining > 30) return 'text-neon-green shadow-neon-green/10';
     if (timeRemaining > 15) return 'text-neon-blue shadow-neon-blue/10';
     return 'text-neon-pink animate-pulse-neon';
+  };
+
+  const handleCopyCode = () => {
+    if (!gameState) return;
+    navigator.clipboard.writeText(gameState.board_id.toString());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const getMaskedWord = () => {
+    const word = gameState?.current_word;
+    if (!word) return 'LOADING';
+    
+    if (isDrawer) return word.toUpperCase();
+    
+    const len = word.length;
+    let revealedIndices = new Set<number>();
+    
+    // Reveal letters progressively based on time elapsed:
+    // - Reveal 1st letter at 40s remaining
+    // - Reveal middle letter at 25s remaining
+    // - Reveal near-end letter at 12s remaining
+    if (timeRemaining <= 40 && len > 2) {
+      revealedIndices.add(0);
+    }
+    if (timeRemaining <= 25 && len > 5) {
+      revealedIndices.add(Math.floor(len / 2));
+    }
+    if (timeRemaining <= 12 && len > 7) {
+      revealedIndices.add(len - 2);
+    }
+    
+    let result = '';
+    for (let i = 0; i < len; i++) {
+      const char = word[i];
+      if (char === ' ' || char === '-') {
+        result += char;
+      } else if (revealedIndices.has(i)) {
+        result += char.toUpperCase();
+      } else {
+        result += '_';
+      }
+    }
+    return result;
   };
 
   return (
@@ -40,6 +85,41 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
         </div>
       </div>
 
+      {/* 2. Room Invite Code Panel (shown when in waiting lobby status) */}
+      {gameState?.status === 'WAITING' && (
+        <div className="glass-panel p-5 rounded-xl flex flex-col gap-3 border border-neon-blue/30 bg-neon-blue/5 shadow-[0_0_15px_rgba(56,189,248,0.05)]">
+          <span className="text-[10px] font-heading font-extrabold tracking-wider text-neon-blue uppercase">
+            Share Invite Code
+          </span>
+          <div className="flex gap-2 items-stretch">
+            <div className="flex-1 bg-navy-darker border border-navy-border hover:border-neon-blue/30 rounded-lg flex items-center justify-center font-mono font-black text-lg text-white select-all py-2">
+              #{gameState.board_id}
+            </div>
+            
+            <button
+              onClick={handleCopyCode}
+              className="bg-neon-blue hover:bg-neon-blue/80 text-navy-darker px-3.5 rounded-lg flex items-center justify-center transition-all active:scale-95 cursor-pointer font-heading font-extrabold text-[10px] gap-1 shrink-0"
+              title="Copy Invite Code"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  COPIED
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  COPY
+                </>
+              )}
+            </button>
+          </div>
+          <p className="text-[9px] text-slate-400 font-sans leading-relaxed m-0 text-left">
+            Give this Room ID number to other players. They can enter it in the **"Join Room by ID"** form on their dashboard to play with you!
+          </p>
+        </div>
+      )}
+
       {/* 2. Secret Word Indicator Box */}
       {gameState?.status === 'DRAWING' && (
         <div className="glass-panel p-5 rounded-xl flex flex-col gap-2.5 border border-navy-border/80">
@@ -52,11 +132,8 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
                 {gameState.current_word}
               </span>
             ) : (
-              // Mask the letters for spectating guessers
               <span className="font-mono font-bold text-lg tracking-[0.25em] text-slate-300">
-                {gameState.current_word
-                  ? gameState.current_word.replace(/[a-zA-Z]/g, '_')
-                  : 'LOADING'}
+                {getMaskedWord()}
               </span>
             )}
           </div>

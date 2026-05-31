@@ -13,7 +13,7 @@ interface ToolbarProps {
 }
 
 const PRESET_COLORS = [
-  '#e2e8f0', // Premium Slate White
+  '#0f172a', // Deep Slate Black
   '#ef4444', // Neon Crimson Red
   '#f97316', // Orange Sunset
   '#fbbf24', // Amber Yellow
@@ -70,6 +70,32 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 title={color}
               />
             ))}
+          </div>
+          
+          {/* Custom Interactive Color Picker */}
+          <div 
+            className={`relative w-7 h-7 rounded-lg cursor-pointer overflow-hidden bg-gradient-to-tr from-pink-500 via-red-500 via-yellow-500 via-green-500 to-blue-500 hover:scale-110 active:scale-90 transition-all shadow-sm shrink-0 flex items-center justify-center ${
+              !PRESET_COLORS.includes(strokeColor) && !isEraser
+                ? 'ring-2 ring-neon-purple ring-offset-2 ring-offset-navy-darker scale-105'
+                : 'border border-white/10'
+            }`}
+            title="Custom Color Picker"
+          >
+            <input
+              type="color"
+              value={isEraser || !strokeColor.startsWith('#') ? '#ffffff' : strokeColor}
+              onChange={(e) => {
+                setStrokeColor(e.target.value);
+                setIsEraser(false);
+              }}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+            />
+            {!PRESET_COLORS.includes(strokeColor) && !isEraser && (
+              <div 
+                style={{ backgroundColor: strokeColor }}
+                className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-inner animate-pulse"
+              />
+            )}
           </div>
           
           {/* Active color preview dot */}
