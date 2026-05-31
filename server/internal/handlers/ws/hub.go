@@ -91,13 +91,15 @@ func (h *Hub) handleUnregister(client *Client) {
 }
 
 func (h *Hub) handleBroadcast(stroke *models.Stroke) {
-	// 1. Asynchronously save drawing history to MongoDB (fire-and-forget write-behind)
-	go func(s *models.Stroke) {
-		ctx := context.Background()
-		if err := h.strokeSvc.SaveStroke(ctx, s); err != nil {
-			log.Printf("Failed to save stroke to MongoDB: %v\n", err)
-		}
-	}(stroke)
+	// 1. Asynchronously save drawing history to MongoDB (only if it is an actual vector drawing)
+	if stroke.Color != "chat" {
+		go func(s *models.Stroke) {
+			ctx := context.Background()
+			if err := h.strokeSvc.SaveStroke(ctx, s); err != nil {
+				log.Printf("Failed to save stroke to MongoDB: %v\n", err)
+			}
+		}(stroke)
+	}
 
 	// 2. Publish drawing event to Redis Pub/Sub for horizontal scaling
 	payload, err := json.Marshal(stroke)
