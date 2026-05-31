@@ -1,0 +1,50 @@
+# Config file for [Air](https://github.com/cosmtrek/air) in Go
+
+# Working directory
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  # Just plain old go build command, directing it to compile cmd/api
+  cmd = "go build -o ./tmp/main ./cmd/api/main.go"
+  # Binary file yields from `cmd`
+  bin = "./tmp/main"
+  # Customize binary execution arguments
+  args_bin = []
+  # Watch these filename extensions
+  include_ext = ["go", "tpl", "html", "toml"]
+  # Ignore these directories
+  exclude_dir = ["assets", "tmp", "vendor", "client"]
+  # Watch these directories if you want
+  include_dir = []
+  # Exclude files
+  exclude_file = []
+  # Exclude specific regular expressions
+  exclude_regex = ["_test.go"]
+  # Exclude unchanged files
+  exclude_unchanged = false
+  # Follow symlinks
+  follow_symlink = false
+  # Log output file
+  log = "build-errors.log"
+  # Delay before rebuilding
+  delay = 1000 # ms
+  # Stop running old binary when build errors occur
+  stop_on_error = true
+  # Send Interrupt signal instead of SIGKILL
+  send_interrupt = true
+  # Kill runner process when exit
+  kill_delay = 500 # ms
+
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = true

@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@theme {
+  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+  
+  /* Sleek custom scrollbars and visual states helpers */
+  --color-navy-darker: #050508;
+  --color-navy-dark: #0a0b10;
+  --color-navy-card: #12131c;
+  --color-navy-border: #1e2030;
+  
+  --color-neon-purple: #c084fc;
+  --color-neon-blue: #38bdf8;
+  --color-neon-pink: #f472b6;
+  --color-neon-green: #34d399;
+}
+
+/* Custom premium scrollbars, typography, and backdrop styling */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-navy-darker);
+  color: #e2e8f0;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar configurations for chat logs & toolbar lists */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-navy-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-navy-border);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neon-purple);
+}
+
+/* Glassmorphism helpers for panels */
+.glass-panel {
+  background: rgba(18, 19, 28, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-panel-neon {
+  background: rgba(18, 19, 28, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(192, 132, 252, 0.15);
+  box-shadow: 0 0 20px 0 rgba(192, 132, 252, 0.05);
+}
+
+/* Soft pulsate micro-animations for active drawer tags */
+@keyframes pulse-neon {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(192, 132, 252, 0.2), 0 0 10px rgba(192, 132, 252, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(192, 132, 252, 0.5), 0 0 25px rgba(192, 132, 252, 0.2);
+  }
+}
+
+.animate-pulse-neon {
+  animation: pulse-neon 2s infinite alternate;
+}
