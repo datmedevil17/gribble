@@ -353,6 +353,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ boardID, onBackToLobby }) 
             <DrawingCanvas
               boardID={boardID}
               userID={currentUser?.id || 0}
+              username={currentUser?.username || ''}
               wsConn={wsConn}
               isDrawer={isDrawer}
               isOwner={isOwner}

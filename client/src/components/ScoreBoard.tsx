@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { GameState, User } from '../api';
-import { Clock, Paintbrush, Shield, User as UserIcon, Copy, Check } from 'lucide-react';
+import { Clock, Paintbrush, Shield, Copy, Check } from 'lucide-react';
+import { PlayerAvatar } from './PlayerAvatar';
 
 interface ScoreBoardProps {
   gameState: GameState | null;
@@ -147,55 +148,75 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
         </span>
 
         <div className="flex flex-col gap-3 max-h-[300px] md:max-h-none overflow-y-auto pr-1">
-          {activeUsers.map((user) => {
+          {activeUsers.map((user, idx) => {
             const isPlayerDrawer = gameState?.drawer_id === user.id;
             const playerScore = gameState?.scores?.[user.id]?.score ?? 0;
             const isSelf = user.id === currentUserID;
 
+            // Rank badge for top 3
+            const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
+
             return (
               <div
                 key={user.id}
-                className={`flex items-center justify-between p-3.5 rounded-lg border transition-all ${
-                  isSelf
-                    ? 'bg-neon-purple/5 border-neon-purple/30'
-                    : 'bg-navy-darker border-navy-border hover:border-slate-700'
+                className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                  isPlayerDrawer
+                    ? 'bg-neon-purple/8 border-neon-purple/40 shadow-[0_0_12px_rgba(192,132,252,0.1)]'
+                    : isSelf
+                    ? 'bg-neon-blue/5 border-neon-blue/25'
+                    : 'bg-navy-darker border-navy-border hover:border-slate-600'
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  {/* Icon badge based on status */}
-                  <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${
-                    isPlayerDrawer 
-                      ? 'bg-neon-purple/20 text-neon-purple animate-pulse-neon' 
-                      : 'bg-slate-800 text-slate-400'
-                  }`}>
-                    {isPlayerDrawer ? (
-                      <Paintbrush className="w-4 h-4" />
-                    ) : isSelf ? (
-                      <Shield className="w-4 h-4 text-neon-purple" />
-                    ) : (
-                      <UserIcon className="w-4 h-4" />
+                  {/* DiceBear Avatar */}
+                  <div className="relative shrink-0">
+                    <PlayerAvatar
+                      username={user.username}
+                      size={34}
+                      ring={isSelf || isPlayerDrawer}
+                      ringColor={isPlayerDrawer ? 'neon-purple' : 'neon-blue'}
+                    />
+                    {/* Drawer paintbrush badge */}
+                    {isPlayerDrawer && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-neon-purple rounded-full flex items-center justify-center shadow-lg">
+                        <Paintbrush className="w-2.5 h-2.5 text-navy-darker" />
+                      </div>
+                    )}
+                    {/* Self shield badge */}
+                    {isSelf && !isPlayerDrawer && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-neon-blue rounded-full flex items-center justify-center shadow-lg">
+                        <Shield className="w-2.5 h-2.5 text-navy-darker" />
+                      </div>
                     )}
                   </div>
-                  
-                  {/* Name tags */}
+
+                  {/* Name + rank */}
                   <div className="flex flex-col min-w-0">
-                    <span className={`text-sm font-heading font-bold truncate ${
-                      isSelf ? 'text-neon-purple' : 'text-slate-200'
-                    }`}>
-                      {user.username}
-                    </span>
-                    <span className="text-[9px] font-mono text-slate-500 uppercase">
-                      ID #{user.id}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      {rankEmoji && gameState?.status !== 'WAITING' && (
+                        <span className="text-xs leading-none">{rankEmoji}</span>
+                      )}
+                      <span className={`text-sm font-heading font-bold truncate ${
+                        isPlayerDrawer ? 'text-neon-purple' : isSelf ? 'text-neon-blue' : 'text-slate-200'
+                      }`}>
+                        {user.username}
+                        {isSelf && <span className="text-[9px] font-mono text-slate-500 ml-1">(you)</span>}
+                      </span>
+                    </div>
+                    {isPlayerDrawer && (
+                      <span className="text-[9px] font-heading text-neon-purple/70 uppercase tracking-wider">Drawing ✏️</span>
+                    )}
                   </div>
                 </div>
 
                 {/* Score Points */}
-                <div className="flex flex-col items-end">
-                  <span className="font-mono text-xs font-extrabold text-neon-blue">
+                <div className="flex flex-col items-end shrink-0">
+                  <span className={`font-mono text-sm font-extrabold ${
+                    playerScore > 0 ? 'text-neon-green' : 'text-slate-500'
+                  }`}>
                     {playerScore}
                   </span>
-                  <span className="text-[8px] font-heading tracking-widest text-slate-500 font-bold uppercase mt-0.5">
+                  <span className="text-[8px] font-heading tracking-widest text-slate-600 font-bold uppercase">
                     PTS
                   </span>
                 </div>

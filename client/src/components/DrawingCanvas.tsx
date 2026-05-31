@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { api } from '../api';
 import type { GameState } from '../api';
 import { Settings, Play, ChevronDown } from 'lucide-react';
+import { PlayerAvatar } from './PlayerAvatar';
 
 export interface Point {
   x: number;
@@ -27,6 +28,7 @@ interface CursorPosition {
 interface DrawingCanvasProps {
   boardID: number;
   userID: number;
+  username: string;
   wsConn: WebSocket | null;
   isDrawer: boolean;
   isOwner: boolean;
@@ -49,6 +51,7 @@ const GAMEMODE_OPTIONS = ['Normal', 'Hidden Word', 'Fast Mode'];
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   boardID,
   userID,
+  username,
   wsConn,
   isDrawer,
   isOwner,
@@ -278,21 +281,21 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         <div className="absolute -top-20 -left-20 w-72 h-72 bg-neon-purple/5 rounded-full filter blur-3xl pointer-events-none animate-pulse" />
         <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-neon-blue/5 rounded-full filter blur-3xl pointer-events-none animate-pulse" style={{ animationDelay: '1s' }} />
 
-        {/* Pulsing logo */}
-        <div className="relative mb-6">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-neon-purple/20 to-neon-blue/20 border border-neon-purple/30 flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(192,132,252,0.15)]">
-            🎨
+        {/* Player's own avatar */}
+        <div className="relative mb-5">
+          <div className="p-1.5 rounded-full bg-gradient-to-br from-neon-purple/40 to-neon-blue/40 shadow-[0_0_30px_rgba(192,132,252,0.25)]">
+            <PlayerAvatar username={username} size={80} ring />
           </div>
-          {/* Orbit dots */}
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-neon-purple rounded-full animate-ping" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-neon-purple rounded-full" />
+          {/* Orbit ping */}
+          <span className="absolute top-0 right-0 w-4 h-4 bg-neon-purple rounded-full animate-ping opacity-70" />
+          <span className="absolute top-0 right-0 w-4 h-4 bg-neon-purple rounded-full" />
         </div>
 
-        <h2 className="font-heading font-black text-xl text-white mb-2">
-          Waiting for Host
+        <h2 className="font-heading font-black text-xl text-white mb-1">
+          Hey, <span className="text-neon-purple">{username}</span>!
         </h2>
         <p className="text-xs text-slate-400 font-sans leading-relaxed max-w-xs">
-          The host is setting up the room. The game will start soon!
+          Waiting for the host to start the game. Get your guessing fingers ready!
         </p>
 
         {/* Animated dots */}
@@ -309,8 +312,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           ))}
         </div>
 
-        <div className="mt-8 text-[10px] font-heading text-slate-600 uppercase tracking-widest">
-          Get ready to guess! ✏️
+        <div className="mt-6 text-[10px] font-heading text-slate-600 uppercase tracking-widest">
+          Waiting for host ✏️
         </div>
       </div>
     );

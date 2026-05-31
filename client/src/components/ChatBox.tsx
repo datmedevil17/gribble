@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { PlayerAvatar } from './PlayerAvatar';
+
 
 export interface ChatMessage {
   id: string;
@@ -74,19 +76,21 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ wsConn, chatMessages, isDrawer
             return (
               <div
                 key={msg.id}
-                className="bg-navy-darker/60 border border-navy-border/40 p-2.5 rounded-lg flex flex-col gap-0.5"
+                className="flex items-start gap-2 bg-navy-darker/60 border border-navy-border/40 p-2.5 rounded-lg"
               >
-                <div className="flex justify-between items-center">
-                  <span className="font-heading font-bold text-slate-300">
-                    {msg.username}
-                  </span>
-                  <span className="text-[8px] font-mono text-slate-600 uppercase">
-                    ID #{msg.user_id}
-                  </span>
+                {/* Avatar thumbnail */}
+                <PlayerAvatar username={msg.username} size={24} />
+
+                <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                  <div className="flex justify-between items-center">
+                    <span className="font-heading font-bold text-slate-300 text-xs">
+                      {msg.username}
+                    </span>
+                  </div>
+                  <p className="m-0 text-slate-400 font-sans leading-relaxed text-left break-all text-xs">
+                    {msg.text}
+                  </p>
                 </div>
-                <p className="m-0 text-slate-400 font-sans leading-relaxed text-left break-all">
-                  {msg.text}
-                </p>
               </div>
             );
           })
