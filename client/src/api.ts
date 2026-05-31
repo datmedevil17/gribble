@@ -23,6 +23,23 @@ export interface Board {
   members?: BoardMember[];
 }
 
+export interface PlayerScore {
+  user_id: number;
+  username: string;
+  score: number;
+}
+
+export interface GameState {
+  board_id: number;
+  status: 'WAITING' | 'DRAWING' | 'ENDED';
+  current_word?: string;
+  drawer_id?: number;
+  round_num: number;
+  time_remaining: number;
+  scores: Record<number, PlayerScore>;
+}
+
+
 export const getAuthToken = (): string | null => localStorage.getItem('token');
 export const setAuthToken = (token: string) => localStorage.setItem('token', token);
 export const getActiveUser = (): User | null => {
@@ -78,7 +95,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   // Auth Operations
-  register: (username: string, email: string: string, password: string) =>
+  register: (username: string, email: string, password: string) =>
     request<{ message: string; user: User }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ username, email, password }),

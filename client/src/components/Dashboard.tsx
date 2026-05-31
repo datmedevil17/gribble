@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { api, Board, getActiveUser } from '../api';
+import { api, getActiveUser } from '../api';
+import type { Board } from '../api';
 import { Plus, LogOut, ArrowRight, Layers, Sparkles, RefreshCw } from 'lucide-react';
 
 interface DashboardProps {

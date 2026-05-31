@@ -1,6 +1,6 @@
 import React from 'react';
-import { GameState, User } from '../api';
-import { Award, Clock, Paintbrush, Shield, User as UserIcon } from 'lucide-react';
+import type { GameState, User } from '../api';
+import { Clock, Paintbrush, Shield, User as UserIcon } from 'lucide-react';
 
 interface ScoreBoardProps {
   gameState: GameState | null;

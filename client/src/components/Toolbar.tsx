@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eraser, Trash2, Brush, Circle } from 'lucide-react';
+import { Eraser, Trash2, Brush } from 'lucide-react';
 
 interface ToolbarProps {
   strokeColor: string;

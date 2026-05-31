@@ -7,6 +7,8 @@ interface AuthViewProps {
   onAuthSuccess: () => void;
 }
 
+const BG_COLOR: [number, number, number] = [0.35, 0.2, 0.65];
+
 export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState('');
@@ -54,7 +56,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4">
       {/* WebGL Iridescence background overlay */}
       <div className="absolute inset-0 z-0 opacity-45">
-        <Iridescence color={[0.35, 0.2, 0.65]} speed={0.45} amplitude={0.08} />
+        <Iridescence color={BG_COLOR} speed={0.45} amplitude={0.08} />
       </div>
 
       {/* Dynamic visual aura background */}

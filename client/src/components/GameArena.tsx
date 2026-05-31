@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { api, Board, getActiveUser, getAuthToken } from '../api';
-import { DrawingCanvas, StrokePayload } from './DrawingCanvas';
+import { api, getActiveUser, getAuthToken } from '../api';
+import type { Board, User } from '../api';
+import { DrawingCanvas } from './DrawingCanvas';
+import type { StrokePayload } from './DrawingCanvas';
 import { Toolbar } from './Toolbar';
 import { ScoreBoard } from './ScoreBoard';
-import { ChatBox, ChatMessage } from './ChatBox';
-import { ArrowLeft, Sparkles, Trophy, Users } from 'lucide-react';
+import { ChatBox } from './ChatBox';
+import type { ChatMessage } from './ChatBox';
+import { ArrowLeft, Sparkles, Users } from 'lucide-react';
 
 interface GameArenaProps {
   boardID: number;
@@ -30,7 +33,6 @@ export const GameArena: React.FC<GameArenaProps> = ({ boardID, onBackToLobby }) 
   const [strokeWidth, setStrokeWidth] = useState(8);
   const [isEraser, setIsEraser] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const currentUser = getActiveUser();
   const membersMap = useRef<Record<number, string>>({});
@@ -52,7 +54,7 @@ export const GameArena: React.FC<GameArenaProps> = ({ boardID, onBackToLobby }) 
       }
       membersMap.current = cache;
     } catch (err: any) {
-      setError(err.message || 'Failed to load board details');
+      console.error(err.message || 'Failed to load board details');
     } finally {
       setLoading(false);
     }

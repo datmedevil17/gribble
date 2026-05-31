@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { BoardMember } from '../api';
+
 
 export interface Point {
   x: number;

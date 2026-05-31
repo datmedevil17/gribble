@@ -46,7 +46,7 @@ void main() {
 }
 `;
 
-interface IridescenceProps extends React.HTMLAttributes<HTMLDivElement> {
+interface IridescenceProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'color'> {
   color?: [number, number, number];
   speed?: number;
   amplitude?: number;
@@ -133,7 +133,10 @@ export default function Iridescence({
       if (mouseReact) {
         ctn.removeEventListener('mousemove', handleMouseMove);
       }
-      ctn.removeChild(gl.canvas);
+      // Defend against React DOM race-conditions: verify child exists before removal
+      if (gl.canvas && ctn.contains(gl.canvas)) {
+        ctn.removeChild(gl.canvas);
+      }
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
   }, [color, speed, amplitude, mouseReact]);
