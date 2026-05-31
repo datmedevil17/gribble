@@ -110,8 +110,8 @@ func (c *Client) ReadPump() {
 				}
 				c.Hub.broadcast <- correctMsg
 
-				// Instantly evaluate if everyone solved to proceed immediately
-				go c.Hub.checkAllSolved(c.BoardID)
+					// Instantly evaluate if everyone solved to proceed immediately
+				go c.Hub.checkAllSolved(c.BoardID, c.Username)
 			} else {
 				chatMsg := &models.Stroke{
 					BoardID: c.BoardID,

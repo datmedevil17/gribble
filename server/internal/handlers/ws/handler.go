@@ -123,8 +123,15 @@ func (h *Handler) RestartGame(c *gin.Context) {
 		return
 	}
 
-	// 2. Broadcast system announcement
-	h.hub.broadcastSystemMessage(boardID, "The lobby host has restarted the game! Get ready! 🏁")
+	// 2. Broadcast the fresh WAITING state so all clients exit the GAME_OVER screen
+	newState, err := h.hub.gameSvc.GetGameState(ctxBg, boardID)
+	if err == nil {
+		stateBytes, _ := json.Marshal(newState)
+		h.hub.broadcastStateMessage(boardID, string(stateBytes))
+	}
+
+	// 3. Broadcast system announcement
+	h.hub.broadcastSystemMessage(boardID, "🏁 Host restarted the game! Get ready for a new match!")
 
 	c.JSON(http.StatusOK, gin.H{"message": "Game restarted successfully"})
 }

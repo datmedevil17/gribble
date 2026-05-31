@@ -270,7 +270,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   };
 
   const winner = getWinner();
-  const isCanvasOwner = currentUserOwnerID === userID;
+  const isCanvasOwner = Number(currentUserOwnerID) === Number(userID);
   const maxRounds = roomConfig.max_rounds ?? 4;
 
   // ─── Guest Waiting Screen (WAITING, non-owner) ──────────────────────────

@@ -191,9 +191,14 @@ func (h *Hub) subscribeToRoom(boardID uint) {
 		h.roomsMu.RLock()
 		clients := h.rooms[boardID]
 		for client := range clients {
-			// For cursor moves: send to everyone EXCEPT the mover (they render themselves)
-			// For all other events: send to everyone except the original sender
-			if client.ID == stroke.UserID {
+			// For drawing strokes and cursor moves: skip the sender (they already rendered locally)
+			// For chat, correct, system, room_update: send to EVERYONE including sender
+			isDrawOrCursor := stroke.Color != "chat" &&
+				stroke.Color != "correct" &&
+				stroke.Color != "system" &&
+				stroke.Color != "room_update" &&
+				stroke.Color != "clear"
+			if isDrawOrCursor && client.ID == stroke.UserID {
 				continue
 			}
 
@@ -468,7 +473,7 @@ func (h *Hub) publishEvent(msg *models.Stroke) {
 
 // ─── All-Solved Detection ────────────────────────────────────────────────────
 
-func (h *Hub) checkAllSolved(boardID uint) {
+func (h *Hub) checkAllSolved(boardID uint, solverName string) {
 	h.roomsMu.RLock()
 	clients, ok := h.rooms[boardID]
 	if !ok || len(clients) <= 1 {
@@ -503,7 +508,8 @@ func (h *Hub) checkAllSolved(boardID uint) {
 		stateBytes, _ := json.Marshal(state)
 		_ = h.redis.Set(ctx, stateKey, stateBytes, 0).Err()
 
-		h.broadcastSystemMessage(boardID, "🌈 Everyone solved it! Moving to the next round! 🚀")
+		roundEndMsg := fmt.Sprintf("🌟 %s solved it! Moving to the next round! 🚀", solverName)
+		h.broadcastSystemMessage(boardID, roundEndMsg)
 
 		go func(bID uint, currentRound int, prevDrawerID uint, maxRounds int) {
 			time.Sleep(2 * time.Second)

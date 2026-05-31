@@ -148,13 +148,21 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
         </span>
 
         <div className="flex flex-col gap-3 max-h-[300px] md:max-h-none overflow-y-auto pr-1">
-          {activeUsers.map((user, idx) => {
+          {[...activeUsers]
+            .sort((a, b) => {
+              const scoreA = gameState?.scores?.[a.id]?.score ?? 0;
+              const scoreB = gameState?.scores?.[b.id]?.score ?? 0;
+              return scoreB - scoreA; // highest score first
+            })
+            .map((user, idx) => {
             const isPlayerDrawer = gameState?.drawer_id === user.id;
             const playerScore = gameState?.scores?.[user.id]?.score ?? 0;
             const isSelf = user.id === currentUserID;
 
-            // Rank badge for top 3
-            const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
+            // Rank medal only during/after active game, based on sorted score position
+            const rankEmoji = gameState?.status !== 'WAITING'
+              ? (idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null)
+              : null;
 
             return (
               <div
